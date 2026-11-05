@@ -1,0 +1,12 @@
+.vs/
+obj/
+Debug/
+Release/
+x64/
+*.exe
+*.pdb
+*.ilk
+*.obj
+*.log
+frames/
+export/
