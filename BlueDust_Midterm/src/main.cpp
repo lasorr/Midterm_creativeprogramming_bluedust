@@ -1,17 +1,12 @@
 #include "ofMain.h"
 #include "ofApp.h"
 
-//========================================================================
-int main( ){
+int main() {
+    ofGLWindowSettings settings;
+    settings.setSize(1920, 1080);
+    settings.windowMode = OF_WINDOW;   // OF_FULLSCREEN para pantalla completa
+    settings.setGLVersion(3, 2);       // deja la versión que te generó el Project Generator
 
-	//Use ofGLFWWindowSettings for more options like multi-monitor fullscreen
-	ofGLWindowSettings settings;
-	settings.setSize(1024, 768);
-	settings.windowMode = OF_WINDOW; //can also be OF_FULLSCREEN
-
-	auto window = ofCreateWindow(settings);
-
-	ofRunApp(window, std::make_shared<ofApp>());
-	ofRunMainLoop();
-
+    ofCreateWindow(settings);
+    ofRunApp(new ofApp());
 }
