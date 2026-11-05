@@ -16,8 +16,10 @@ public:
     void setup();
     void update();
     void draw();
+    void exit();
 
     void buildGlitter();
+    void playChime(bool falls);
 
     ofImage photo;
     std::vector<Cell> cells;
@@ -30,6 +32,18 @@ public:
     // --- calendario ---
     float introTime = 10;    // foto quieta
     float lastStart = 155;   // último inicio posible (160 - fallDur máx)
-    float kCurve = 2.0f;  // 1 = ritmo constante, >1 = acelera
-    float fallProb = 0.6f;  // probabilidad de caer (resto: desvanece)
+    float kCurve = 2.0f;     // 1 = ritmo constante, >1 = acelera
+    float fallProb = 0.6f;   // probabilidad de caer (resto: desvanece)
+
+    // --- audio ---
+    ofSoundPlayer music;
+    std::vector<ofSoundPlayer> chimes;   // banco para que se solapen
+    int   chimeIdx = 0;
+    float chimeVol = 0.2f;               // flojo
+    float minGap = 0.08f;                // mínimo entre sonidos (seg)
+    float lastSoundT = -1;
+
+    std::vector<std::pair<float, bool>> events; // (instante, cae?) ordenados
+    size_t nextEvent = 0;
+    std::vector<float> soundLog;         // para montar el audio al exportar
 };
