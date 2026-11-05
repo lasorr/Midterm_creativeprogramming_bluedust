@@ -29,19 +29,7 @@ void ofApp::setup() {
         }
     }
 
-    // calendario de eventos, ordenado en el tiempo
-    for (auto& c : cells) events.push_back({ c.tStart, c.falls });
-    std::sort(events.begin(), events.end());
-
-    // sonidos
-    chimes.resize(6);
-    for (auto& s : chimes) {
-        s.load("chime.wav");
-        s.setMultiPlay(true);
-        s.setVolume(chimeVol);
-    }
-
-    // música (al final, para que arranque a la vez que el frame 0)
+    // música de fondo
     music.load("cancion.mp3");
     music.setLoop(false);
     music.setVolume(0.8f);
@@ -73,19 +61,6 @@ void ofApp::buildGlitter() {
 void ofApp::update() {
     // tiempo por contador de frames: determinista al exportar
     timeNow = ofGetFrameNum() / fps;
-
-    // ¿qué eventos han ocurrido desde el frame anterior?
-    bool any = false, lastFalls = false;
-    while (nextEvent < events.size() && events[nextEvent].first <= timeNow) {
-        any = true;
-        lastFalls = events[nextEvent].second;
-        nextEvent++;
-    }
-    // un solo sonido por tanda, y respetando el hueco mínimo
-    if (any && timeNow - lastSoundT >= minGap) {
-        playChime(lastFalls);
-        lastSoundT = timeNow;
-    }
 }
 
 void ofApp::draw() {
@@ -126,25 +101,4 @@ void ofApp::draw() {
             ofDrawRectangle(x, y, cellSize, cellSize);
         }
     }
-}
-
-void ofApp::playChime(bool falls) {
-    auto& s = chimes[chimeIdx];
-    chimeIdx = (chimeIdx + 1) % chimes.size();
-
-    // los que caen suenan más graves, los que se desvanecen más agudos
-    s.setSpeed(falls ? ofRandom(0.8f, 1.1f) : ofRandom(1.2f, 1.8f));
-    s.setPan(ofRandom(-0.6f, 0.6f));
-    s.play();
-
-    soundLog.push_back(timeNow);   // para el montaje final
-}
-
-void ofApp::exit() {
-    // guarda en qué segundo sonó cada chime (para ffmpeg)
-    ofFile f("sonidos.txt", ofFile::WriteOnly);
-    for (float t : soundLog) {
-        f << ofToString(t, 3) << "\n";
-    }
-    f.close();
 }

@@ -16,10 +16,8 @@ public:
     void setup();
     void update();
     void draw();
-    void exit();
 
     void buildGlitter();
-    void playChime(bool falls);
 
     ofImage photo;
     std::vector<Cell> cells;
@@ -37,13 +35,4 @@ public:
 
     // --- audio ---
     ofSoundPlayer music;
-    std::vector<ofSoundPlayer> chimes;   // banco para que se solapen
-    int   chimeIdx = 0;
-    float chimeVol = 0.2f;               // flojo
-    float minGap = 0.08f;                // mínimo entre sonidos (seg)
-    float lastSoundT = -1;
-
-    std::vector<std::pair<float, bool>> events; // (instante, cae?) ordenados
-    size_t nextEvent = 0;
-    std::vector<float> soundLog;         // para montar el audio al exportar
 };
