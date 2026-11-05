@@ -1,16 +1,26 @@
 #include "ofApp.h"
 
 void ofApp::setup() {
-    ofSetFrameRate(fps);
-    ofSetRandomSeed(42); // misma secuencia siempre (útil para exportar)
+    ofSetRandomSeed(42); // misma secuencia siempre
 
-    photo.load("foto.jpg");                       // en bin/data/
-    photo.resize(ofGetWidth(), ofGetHeight());
+    if (recording) {
+        ofSetVerticalSync(false);
+        ofSetFrameRate(1000);              // sin límite: renderiza lo más rápido posible
+        ofDirectory::createDirectory("frames", true, true);   // bin/data/frames
+    }
+    else {
+        ofSetFrameRate(fps);
+    }
+
+    fbo.allocate(outW, outH, GL_RGB);
+
+    photo.load("foto.jpg");                // en bin/data/
+    photo.resize(outW, outH);
 
     buildGlitter();
 
-    int cols = ofGetWidth() / cellSize;
-    int rows = ofGetHeight() / cellSize;
+    int cols = outW / cellSize;
+    int rows = outH / cellSize;
     float span = lastStart - introTime;
 
     for (int r = 0; r < rows; r++) {
@@ -29,11 +39,13 @@ void ofApp::setup() {
         }
     }
 
-    // música de fondo
-    music.load("cancion.mp3");
-    music.setLoop(false);
-    music.setVolume(0.8f);
-    music.play();
+    // música: solo en vista previa (en la grabación se añade con ffmpeg)
+    if (!recording) {
+        music.load("cancion.mp3");
+        music.setLoop(false);
+        music.setVolume(0.8f);
+        music.play();
+    }
 }
 
 void ofApp::buildGlitter() {
@@ -59,13 +71,41 @@ void ofApp::buildGlitter() {
 }
 
 void ofApp::update() {
-    // tiempo por contador de frames: determinista al exportar
-    timeNow = ofGetFrameNum() / fps;
+    // tiempo por contador de frames: determinista
+    timeNow = frame / fps;
 }
 
 void ofApp::draw() {
+    // 1) dibujar la escena en el FBO (1920x1080 siempre)
+    fbo.begin();
+    drawScene();
+    fbo.end();
+
+    // 2) si grabamos, guardar el frame
+    if (recording) {
+        ofPixels pix;
+        fbo.readToPixels(pix);
+        ofSaveImage(pix, "frames/f_" + ofToString(frame, 5, '0') + ".jpg",
+            OF_IMAGE_QUALITY_BEST);
+    }
+
+    // 3) mostrar en la ventana (escalado a su tamaño)
     ofBackground(0);
-    float H = ofGetHeight();
+    ofSetColor(255);
+    fbo.draw(0, 0, ofGetWidth(), ofGetHeight());
+
+    frame++;
+
+    // 4) parar al terminar
+    if (recording && timeNow >= totalTime) {
+        ofLogNotice() << "Grabacion terminada: " << frame << " frames";
+        ofExit();
+    }
+}
+
+void ofApp::drawScene() {
+    ofBackground(0);
+    float H = outH;
 
     // Pasada 1: huecos (pixel quieto / purpurina / desvanecimiento)
     for (auto& c : cells) {
@@ -93,7 +133,6 @@ void ofApp::draw() {
     for (auto& c : cells) {
         float t = timeNow - c.tStart;
         if (c.falls && t >= 0 && t < c.fallDur) {
-            // gravedad calibrada: llega al fondo justo en fallDur
             float g = 2.0f * (H + cellSize) / (c.fallDur * c.fallDur);
             float y = c.pos.y + 0.5f * g * t * t;
             float x = c.pos.x + c.drift * t;
