@@ -41,7 +41,7 @@ public:
     float fallProb = 0.6f;    // probabilidad de caer (resto: desvanece)
 
     // --- grabación ---
-    bool  recording = false;  // true = exporta frames y NO suena la música
+    bool  recording = true;  // true = exporta frames y NO suena la música
     float totalTime = 160;    // duración total (s)
 
     // --- audio ---
